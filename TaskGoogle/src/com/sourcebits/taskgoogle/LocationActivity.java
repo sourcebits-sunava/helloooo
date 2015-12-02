@@ -3,7 +3,10 @@ package com.sourcebits.taskgoogle;
 import android.app.Activity;
 import android.location.Location;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -59,12 +62,28 @@ public class LocationActivity extends Activity {
                 double latitude = location.getLatitude();
 
                 
-                marker = map.addMarker(new MarkerOptions().position(loc).title(Country).snippet("state : "+State));
+                marker = map.addMarker(new MarkerOptions().position(loc).title(Country));
                 map.animateCamera(CameraUpdateFactory.newLatLngZoom(loc, 16.0f));
                 locationText.setText("You are at [" + longitude + " ; " + latitude + " ]");
-                map.setOnMarkerClickListener(onMarkerClickedListener);
+                map.setInfoWindowAdapter(new MarkerInfoWindowAdapter());
                 //get current address by invoke an AsyncTask object
                 new GetAddressTask(LocationActivity.this).execute(String.valueOf(latitude), String.valueOf(longitude));
+                if (map != null)
+                {
+                    map.setOnMarkerClickListener(new GoogleMap.OnMarkerClickListener()
+                    {
+                        @Override
+                        public boolean onMarkerClick(com.google.android.gms.maps.model.Marker marker)
+                        {
+                            marker.showInfoWindow();
+                            return true;
+                        }
+                    });
+                }
+                else
+                    Toast.makeText(getApplicationContext(), "Unable to create Maps", Toast.LENGTH_SHORT).show();
+            
+                
             }
         };
     }
@@ -87,5 +106,33 @@ public class LocationActivity extends Activity {
         addressText.setText(address);
         this.Country = Country;
         this.State = State;
+    }
+    public class MarkerInfoWindowAdapter implements GoogleMap.InfoWindowAdapter
+    {
+        public MarkerInfoWindowAdapter()
+        {
+        }
+
+        @Override
+        public View getInfoWindow(Marker marker)
+        {
+            return null;
+        }
+
+        @Override
+        public View getInfoContents(Marker marker)
+        {
+            View v  = getLayoutInflater().inflate(R.layout.infomarker, null);
+
+            ImageView markerIcon = (ImageView) v.findViewById(R.id.marker_icon);
+
+            TextView markerLabel = (TextView)v.findViewById(R.id.marker_label);
+
+            markerIcon.setImageResource(R.drawable.ball);
+
+            markerLabel.setText(State);
+
+            return v;
+        }
     }
 }
